@@ -6,12 +6,15 @@ use esp_idf_sys::{
 };
 use bitflags::bitflags;
 use esp_idf_sys::c_types::c_char;
+use esp_idf_sys::{mkdir, readdir};
+use esp_idf_sys::opendir;
 
 use std::fs;
 use std::ptr;
 
 pub const MOUNT_POINT: &'static str = "/sdcard";
 const C_MOUNT_POINT: &'static [u8] = b"/sdcard\0";
+const C_DATA_DIR: &'static [u8] = b"/sdcard/wow\0";
 
 const SPI_HOST_SLOT: spi_host_device_t = spi_host_device_t_SPI2_HOST;
 const SPI_GPIO_MOSI: gpio_num_t = 4;
@@ -144,18 +147,31 @@ fn setup() {
 }
 
 fn simple_fs_test() {
-    let _file = fs::File::create("/sdcard/foo.txt").expect("Create foo failed");
-    let _file = fs::File::create("/sdcard/bar.txt").expect("Create bar failed");
+    let res = esp!(unsafe {
+        mkdir(
+            C_DATA_DIR.as_ptr() as *const c_char,
+            0777,
+        )
+    });
 
-    for entry in fs::read_dir("/sdcard").unwrap() {
-        if let Ok(name) = entry {
-            if let Some(namestr) = name.path().to_str() {
-                if let Some(file) = namestr.split("/").last() {
-                    println!("Found a file: {:?}", file.to_string());
-                }
+    let _file = fs::File::create("/sdcard/wow/foo.txt").expect("Create foo failed");
+    let _file = fs::File::create("/sdcard/wow/bar.txt").expect("Create bar failed");
+
+    unsafe {
+        let x = opendir(
+            C_DATA_DIR.as_ptr() as *const c_char,
+        );
+        if std::ptr::null() != x {
+            let mut y = readdir(x);
+            while std::ptr::null() != y {
+                println!("I am here!");
+                println!("The name: {:?}", (*y).d_name);
+                y = readdir(x);
             }
         }
-    }
+    };
+
+    
 }
 
 fn main() {
