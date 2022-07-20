@@ -11,6 +11,9 @@ use esp_idf_sys::opendir;
 
 use std::fs;
 use std::ptr;
+use std::slice;
+use std::str::from_utf8;
+use std::mem::transmute;
 
 pub const MOUNT_POINT: &'static str = "/sdcard";
 const C_MOUNT_POINT: &'static [u8] = b"/sdcard\0";
@@ -165,7 +168,13 @@ fn simple_fs_test() {
             let mut y = readdir(x);
             while std::ptr::null() != y {
                 println!("I am here!");
-                println!("The name: {:?}", (*y).d_name);
+                println!("String: {}", from_utf8(transmute((*y).d_name.as_slice())).unwrap());
+                //println!("String: {}", from_utf8(transmute::<&[i8], &[u8]>((*y).d_name.as_slice())).unwrap());
+                //println!("String: {}", transmute::<&[i8], &[u8]>((*y).d_name.as_slice()).to_string());
+                //println!("String: {}", from_utf8((*y).d_name.as_ref::<u8>()).unwrap());
+                //println!("String: {}", from_utf8((*y).d_name.as_slice() as &[u8]));
+                //println!("String: {}", (*y).d_name.to_string());
+                //println!("The name: {:?}", (*y).d_name);
                 y = readdir(x);
             }
         }
