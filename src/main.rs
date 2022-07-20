@@ -150,16 +150,10 @@ fn setup() {
 }
 
 fn simple_fs_test() {
-    let res = esp!(unsafe {
-        mkdir(
-            C_DATA_DIR.as_ptr() as *const c_char,
-            0777,
-        )
-    });
-
+    let _ = fs::create_dir("/sdcard/wow").unwrap();
     let _file = fs::File::create("/sdcard/wow/foo.txt").expect("Create foo failed");
     let _file = fs::File::create("/sdcard/wow/bar.txt").expect("Create bar failed");
-
+    println!("Here are the files in data");
     unsafe {
         let x = opendir(
             C_DATA_DIR.as_ptr() as *const c_char,
@@ -167,14 +161,7 @@ fn simple_fs_test() {
         if std::ptr::null() != x {
             let mut y = readdir(x);
             while std::ptr::null() != y {
-                println!("I am here!");
-                println!("String: {}", from_utf8(transmute((*y).d_name.as_slice())).unwrap());
-                //println!("String: {}", from_utf8(transmute::<&[i8], &[u8]>((*y).d_name.as_slice())).unwrap());
-                //println!("String: {}", transmute::<&[i8], &[u8]>((*y).d_name.as_slice()).to_string());
-                //println!("String: {}", from_utf8((*y).d_name.as_ref::<u8>()).unwrap());
-                //println!("String: {}", from_utf8((*y).d_name.as_slice() as &[u8]));
-                //println!("String: {}", (*y).d_name.to_string());
-                //println!("The name: {:?}", (*y).d_name);
+                println!("{}", from_utf8(transmute((*y).d_name.as_slice())).unwrap());
                 y = readdir(x);
             }
         }
