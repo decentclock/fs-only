@@ -148,8 +148,12 @@ fn simple_fs_test() {
     let _file = fs::File::create("/sdcard/bar.txt").expect("Create bar failed");
 
     for entry in fs::read_dir("/sdcard").unwrap() {
-        let entry = entry.unwrap();
-        println!("Found a file: {:?}", entry);
+        let pathbuf = entry.unwrap().path();
+        let path = pathbuf.to_string_lossy();
+        if let Some(file) = path.split("/").last() {
+            println!("Found a file: {:?}", file.to_string());
+        }
+        
     }
 }
 
