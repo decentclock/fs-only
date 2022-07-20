@@ -10,6 +10,9 @@ use esp_idf_sys::c_types::c_char;
 use std::fs;
 use std::ptr;
 
+use fsdb::{Bucket, DoubleBucket, Fsdb};
+use serde::{Deserialize, Serialize};
+
 pub const MOUNT_POINT: &'static str = "/sdcard";
 const C_MOUNT_POINT: &'static [u8] = b"/sdcard\0";
 
@@ -143,19 +146,23 @@ fn setup() {
     }
 }
 
-fn simple_fs_test() {
-    let _file = fs::File::create("/sdcard/foo.txt").expect("Create foo failed");
-    let _file = fs::File::create("/sdcard/bar.txt").expect("Create bar failed");
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+struct Thing {
+    n: u8,
+}
 
-    for entry in fs::read_dir("/sdcard").unwrap() {
-        if let Ok(name) = entry {
-            if let Some(namestr) = name.path().to_str() {
-                if let Some(file) = namestr.split("/").last() {
-                    println!("Found a file: {:?}", file.to_string());
-                }
-            }
-        }
-    }
+fn simple_fs_test() {
+    let db = Fsdb::new("/sdcard/store").expect("could not create db");
+    let b = db.bucket::<Thing>("hi", Some(8)).expect("fail bucket");
+    let k = "key";
+    let v = Thing{n:0};
+    let _ = b.put("key", v);
+    let v1 = b.get("key");
+    println!("V1 {:?}", v1);
+
+    let k2 = "key".to_string();
+    let v2 = b.get(&k2);
+    let _ = b.put(&k2, Thing{n:1});
 }
 
 fn main() {
