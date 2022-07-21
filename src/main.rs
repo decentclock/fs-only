@@ -150,6 +150,31 @@ fn setup() {
 }
 
 fn simple_fs_test() {
+    let _file = fs::File::create("/sdcard/foo.txt").expect("Create foo failed");
+    let _file = fs::File::create("/sdcard/bar.txt").expect("Create bar failed");
+
+    for entry in fs::read_dir("/sdcard").unwrap() {
+        if let Ok(name) = entry {
+            if let Some(namestr) = name.path().to_str() {
+                if let Some(file) = namestr.split("/").last() {
+                    println!("Found a file: {:?}", file.to_string());
+                }
+            }
+        }
+    }
+}
+
+fn main() {
+    // Temporary. Will disappear once ESP-IDF 4.4 is released, but for now it is necessary to call this function once,
+    // or else some patches to the runtime implemented by esp-idf-sys might not link properly.
+    //esp_idf_sys::link_patches();
+
+    setup();
+    simple_fs_test();
+    println!("Hello, world!");
+}
+
+fn working_fs_list() {
     let _ = fs::create_dir("/sdcard/wow").unwrap();
     let _file = fs::File::create("/sdcard/wow/foo.txt").expect("Create foo failed");
     let _file = fs::File::create("/sdcard/wow/bar.txt").expect("Create bar failed");
@@ -166,16 +191,4 @@ fn simple_fs_test() {
             }
         }
     };
-
-    
-}
-
-fn main() {
-    // Temporary. Will disappear once ESP-IDF 4.4 is released, but for now it is necessary to call this function once,
-    // or else some patches to the runtime implemented by esp-idf-sys might not link properly.
-    //esp_idf_sys::link_patches();
-
-    setup();
-    simple_fs_test();
-    println!("Hello, world!");
 }
