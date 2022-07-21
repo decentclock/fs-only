@@ -150,24 +150,36 @@ fn setup() {
 }
 
 fn simple_fs_test() {
-    let _ = fs::create_dir("/sdcard/wow").unwrap();
-    let _file = fs::File::create("/sdcard/wow/foo.txt").expect("Create foo failed");
+    let dir = "/sdcard/wow";
+    let _ = fs::create_dir("/sdcard/wow");
+    let _file = fs::File::create("/sdcard/wow/me.txt").expect("Create foo failed");
     let _file = fs::File::create("/sdcard/wow/bar.txt").expect("Create bar failed");
     println!("Here are the files in data");
+    let files = listdir(dir);
+    println!("{:?}", files);
+}
+
+fn listdir(dir: &str) -> Vec<String> {
+    let mut ret: Vec<String> = Vec::new();
+    let mut datadir = [dir.as_bytes(), b"\0"].concat();
     unsafe {
-        let x = opendir(
-            C_DATA_DIR.as_ptr() as *const c_char,
-        );
+        let x = opendir(datadir.as_ptr() as *const c_char);
         if std::ptr::null() != x {
             let mut y = readdir(x);
             while std::ptr::null() != y {
-                println!("{}", from_utf8(transmute((*y).d_name.as_slice())).unwrap());
+                let mut bytes: &[u8] = transmute((*y).d_name.as_slice());
+                if let Some(fz) = bytes.iter().position(|&r| r==0x0) {
+                    bytes = &bytes[..fz];
+                }
+                if let Ok(sl) = from_utf8(bytes) {
+                    let n = format!("{}", sl);
+                    ret.push(n.trim().to_string());
+                }
                 y = readdir(x);
             }
         }
     };
-
-    
+    ret
 }
 
 fn main() {
