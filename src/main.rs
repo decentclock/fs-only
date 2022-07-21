@@ -156,6 +156,7 @@ fn simple_fs_test() {
     for entry in fs::read_dir("/sdcard").unwrap() {
         if let Ok(name) = entry {
             if let Some(namestr) = name.path().to_str() {
+                println!("PATH: {}", namestr);
                 if let Some(file) = namestr.split("/").last() {
                     println!("Found a file: {:?}", file.to_string());
                 }
